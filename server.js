@@ -8,14 +8,17 @@ const { apiLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 
-app.set('trust proxy', 1);
+// Only trust proxy headers in production (prevents X-Forwarded-For spoofing in dev)
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
 app.disable('x-powered-by');
 
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
       imgSrc: ["'self'", 'data:', 'blob:'],

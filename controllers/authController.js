@@ -12,8 +12,8 @@ async function login(req, res) {
   const { username, password } = req.body;
 
   try {
-    const [rows] = await db.query(
-      'SELECT id, username, password_hash, locked_until, login_attempts FROM admins WHERE username = ? LIMIT 1',
+    const { rows } = await db.query(
+      'SELECT id, username, password_hash, locked_until, login_attempts FROM admins WHERE username = $1 LIMIT 1',
       [username]
     );
 
@@ -34,7 +34,7 @@ async function login(req, res) {
       const attempts = (admin.login_attempts || 0) + 1;
       const lockUntil = attempts >= 5 ? new Date(Date.now() + 15 * 60 * 1000) : null;
       await db.query(
-        'UPDATE admins SET login_attempts = ?, locked_until = ? WHERE id = ?',
+        'UPDATE admins SET login_attempts = $1, locked_until = $2 WHERE id = $3',
         [attempts, lockUntil, admin.id]
       );
       await new Promise(r => setTimeout(r, 800));
@@ -42,7 +42,7 @@ async function login(req, res) {
     }
 
     await db.query(
-      'UPDATE admins SET login_attempts = 0, locked_until = NULL, last_login = NOW() WHERE id = ?',
+      'UPDATE admins SET login_attempts = 0, locked_until = NULL, last_login = NOW() WHERE id = $1',
       [admin.id]
     );
 
